@@ -2,7 +2,7 @@
 
 function Models() {
   return (
-    <div>Models</div>
+    <div>Models Modelsjon qalesan </div>
   )
 }
 
