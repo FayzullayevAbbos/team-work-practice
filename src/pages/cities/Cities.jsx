@@ -2,7 +2,9 @@
 
 function Cities() {
   return (
-    <div>Cities</div>
+    <div>
+      <h1>TEST </h1>
+    </div>
   )
 }
 
