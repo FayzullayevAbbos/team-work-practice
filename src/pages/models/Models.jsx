@@ -3,7 +3,7 @@ import { Button, Form, Input, Modal, Select, Table, message } from 'antd';
 import { useEffect, useState } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
+import '../../index.css'
 function Models() {
   const [model, setModel] = useState([]);
   const [brands, setBrands] = useState([]);
@@ -225,8 +225,8 @@ function Models() {
       key: 'action',
       render: (text, record) => (
         <span>
-          <Button icon={<EditOutlined />} style={{ marginRight: 8 }} onClick={() => handleEdit(record)} />
-          <Button icon={<DeleteOutlined />} onClick={() => deleteModal(record.id)} />
+          <Button className=' bg-green-700 text-white' icon={<EditOutlined className=''/>} style={{ marginRight: 8 }} onClick={() => handleEdit(record)} />
+          <Button className='bg-red-700 text-white' icon={<DeleteOutlined />} onClick={() => deleteModal(record.id)} />
         </span>
       ),
     },
@@ -239,9 +239,12 @@ function Models() {
 
   return (
     <div>
-      <Button type="primary" onClick={handleAdd}>
-        <PlusOutlined /> Add Model
-      </Button>
+     <div className="w-full flex justify-end mb-[20px]">
+  <Button type="primary" onClick={handleAdd}>
+    <PlusOutlined /> Add Model
+  </Button>
+</div>
+
 
       <Table dataSource={model} columns={columns} />
 
