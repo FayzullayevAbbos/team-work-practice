@@ -154,7 +154,7 @@ const Cities = () => {
     <div>
       <div className="cities-adds">
         <h1>Cities</h1>
-        <Button type="primary" className="add-button" onClick={handleAdd} icon={<PlusOutlined />}>ADD CATEGORY</Button>
+        <Button type="primary" className="add-button" onClick={handleAdd} icon={<PlusOutlined />}></Button>
       </div>
       <table className="customers">
         <thead>
