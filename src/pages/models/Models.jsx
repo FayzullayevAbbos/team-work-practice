@@ -128,6 +128,7 @@ function Models() {
         setOpenAddModal(false); // Close the modal after successful submission
       } else {
         message.error(data?.message || "Model qo'shishda xatolik yuz berdi");
+        setOpenAddModal(false); 
       }
     })
     .catch(error => {
@@ -203,8 +204,8 @@ function Models() {
   const handleEdit = (record) => {
     setCurrentModel(record);
     form.setFieldsValue({
-      name: record.name,
-      brand_id: record.brand_id,
+      name: record?.name,
+      brand_id: record?.brand_id,
     });
     setOpenAddModal(true);
   };
