@@ -289,7 +289,7 @@ function Models() {
         <p>Modelni o'chirishga ishonchingiz komilmi?</p>
       </Modal>
 
-      <ToastContainer />
+      
     </div>
   );
 }
