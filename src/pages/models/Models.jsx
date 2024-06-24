@@ -1,9 +1,9 @@
 import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
 import { Button, Form, Input, Modal, Select, Table, message } from 'antd';
 import { useEffect, useState } from 'react';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-
+// import { ToastContainer, toast } from 'react-toastify';
+// import 'react-toastify/dist/ReactToastify.css';
+import '../../index.css'
 function Models() {
   const [model, setModel] = useState([]);
   const [brands, setBrands] = useState([]);
@@ -11,6 +11,7 @@ function Models() {
   const [openDeleteModal, setOpenDeleteModal] = useState(false); // Modal for delete confirmation
   const [deleteId, setDeleteId] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [currentModel, setCurrentModel] = useState(null); // State for the model being edited
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -127,11 +128,50 @@ function Models() {
         setOpenAddModal(false); // Close the modal after successful submission
       } else {
         message.error(data?.message || "Model qo'shishda xatolik yuz berdi");
+        setOpenAddModal(false); 
       }
     })
     .catch(error => {
       console.error('Error adding model:', error);
       message.error('Model qo\'shishda xatolik yuz berdi');
+    })
+    .finally(() => {
+      setLoading(false);
+    });
+  };
+
+  const updateModel = (id, values) => {
+    setLoading(true);
+    const token = localStorage.getItem('token');
+
+    fetch(`https://autoapi.dezinfeksiyatashkent.uz/api/models/${id}`, {
+      method: "PUT",
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json' // Ensure correct content type if sending JSON data
+      },
+      body: JSON.stringify(values) // Convert JavaScript object to JSON string
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Xato so\'rov yuborildi');
+      }
+      return response.json();
+    })
+    .then(data => {
+      if (data?.success) {
+        message.success("Model muvaffaqiyatli yangilandi");
+        getModels(); // Refresh the models list
+        getBrands(); // Refresh the brands list if necessary
+        form.resetFields(); // Reset form fields after successful submission
+        setOpenAddModal(false); // Close the modal after successful submission
+      } else {
+        message.error(data?.message || "Model yangilashda xatolik yuz berdi");
+      }
+    })
+    .catch(error => {
+      console.error('Error updating model:', error);
+      message.error('Model yangilashda xatolik yuz berdi');
     })
     .finally(() => {
       setLoading(false);
@@ -148,7 +188,26 @@ function Models() {
   };
 
   const onFinish = (values) => {
-    addModel(values);
+    if (currentModel) {
+      updateModel(currentModel.id, values);
+    } else {
+      addModel(values);
+    }
+  };
+
+  const handleAdd = () => {
+    setCurrentModel(null);
+    form.resetFields();
+    setOpenAddModal(true);
+  };
+
+  const handleEdit = (record) => {
+    setCurrentModel(record);
+    form.setFieldsValue({
+      name: record?.name,
+      brand_id: record?.brand_id,
+    });
+    setOpenAddModal(true);
   };
 
   const columns = [
@@ -167,22 +226,12 @@ function Models() {
       key: 'action',
       render: (text, record) => (
         <span>
-          <Button icon={<EditOutlined />} style={{ marginRight: 8 }} onClick={() => handleEdit(record)} />
-          <Button icon={<DeleteOutlined />} onClick={() => deleteModal(record.id)} />
+          <Button className=' bg-green-700 text-white' icon={<EditOutlined className=''/>} style={{ marginRight: 8 }} onClick={() => handleEdit(record)} />
+          <Button className='bg-red-700 text-white' icon={<DeleteOutlined />} onClick={() => deleteModal(record.id)} />
         </span>
       ),
     },
   ];
-
-  const handleAdd = () => {
-    setOpenAddModal(true);
-  };
-
-  const handleEdit = (record) => {
-    // Handle edit functionality here
-    // Example: populate form fields with record data
-    console.log('Edit:', record);
-  };
 
   const options = brands.map((brand) => ({
     value: brand.id,
@@ -191,14 +240,17 @@ function Models() {
 
   return (
     <div>
-      <Button type="primary" onClick={handleAdd}>
-        <PlusOutlined /> Add Model
-      </Button>
+     <div className="w-full flex justify-end mb-[20px]">
+  <Button type="primary" onClick={handleAdd}>
+    <PlusOutlined /> Add Model
+  </Button>
+</div>
+
 
       <Table dataSource={model} columns={columns} />
 
       <Modal
-        title="Model qo'shish"
+        title={currentModel ? "Modelni tahrirlash" : "Model qo'shish"}
         visible={openAddModal}
         onOk={handleOk}
         onCancel={handleCancel}
@@ -237,7 +289,7 @@ function Models() {
         <p>Modelni o'chirishga ishonchingiz komilmi?</p>
       </Modal>
 
-      <ToastContainer />
+      
     </div>
   );
 }
