@@ -1,183 +1,296 @@
 import React, { useEffect, useState } from 'react';
+import { Modal, message, Button } from 'antd';
+import { EditOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import './Category.css';
 
-// Modal component
-function Modal({ show, onClose, onSave, category }) {
-    const [nameEn, setNameEn] = useState(category ? category.name_en : '');
-    const [nameRu, setNameRu] = useState(category ? category.name_ru : '');
-    const [image, setImage] = useState(null);
+const Category = () => {
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [openEditModal, setOpenEditModal] = useState(false);
+  const [openAddModal, setOpenAddModal] = useState(false);
+  const [id, setId] = useState(null);
+  const [data, setData] = useState({ name_en: '', name_ru: '', image: null });
+  const [openDeleteModal, setOpenDeleteModal] = useState(false);
 
-    useEffect(() => {
-        if (category) {
-            setNameEn(category.name_en);
-            setNameRu(category.name_ru);
+  const urlImg = 'https://autoapi.dezinfeksiyatashkent.uz/api/uploads/images/';
+  
+  const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNTczNzkzNTUtZDNjYi00NzY1LTgwMGEtNDZhOTU1NWJiOWQyIiwidG9rZW5fdHlwZSI6ImFjY2VzcyIsImlhdCI6MTcxODYxNTMzOCwiZXhwIjoxNzUwMTUxMzM4fQ.8VHqHugzBuuXAF2A01S6etFMf2Ou_YD1OiZn3Uc96oI';  // Replace with your actual token
+
+  const getCategory = () => {
+    setLoading(true);
+    fetch('https://autoapi.dezinfeksiyatashkent.uz/api/categories')
+      .then((res) => res.json())
+      .then((data) => {
+        setCategories(data.data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error('Error fetching categories:', error);
+        setLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    getCategory();
+  }, []);
+
+  const handleEdit = (item) => {
+    setId(item.id);
+    setData({ name_en: item.name_en, name_ru: item.name_ru, image: item.image_src });
+    setOpenEditModal(true);
+  };
+
+  const handleAdd = () => {
+    setData({ name_en: '', name_ru: '', image: null });
+    setOpenAddModal(true);
+  };
+
+  const handleDelete = (id) => {
+    fetch(`https://autoapi.dezinfeksiyatashkent.uz/api/categories/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      method: 'DELETE'
+    })
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.success) {
+          const newCategories = categories.filter((category) => category.id !== id);
+          setCategories(newCategories);
+          message.success('Category deleted successfully.');
         } else {
-            setNameEn('');
-            setNameRu('');
-            setImage(null);
+          message.error('Failed to delete category.');
         }
-    }, [category]);
+        setOpenDeleteModal(false);
+      })
+      .catch((error) => {
+        console.error('Error deleting category:', error);
+        message.error('Failed to delete category.');
+        setOpenDeleteModal(false);
+      });
+  };
 
-    if (!show) {
-        return null;
+  const addCategory = (e) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append('name_en', data.name_en);
+    formData.append('name_ru', data.name_ru);
+    if (data.image instanceof File) {
+      formData.append('images', data.image);
     }
 
-    const handleImageChange = (e) => {
-        const file = e.target.files[0];
-        setImage(file);
-    };
-
-    const handleSave = () => {
-        const formData = new FormData();
-        formData.append('name_en', nameEn);
-        formData.append('name_ru', nameRu);
-        if (image) {
-            formData.append('image', image);
-        }
-
-        onSave(formData);
-    };
-
-    return (
-        <div className='modal-overlay'>
-            <div className='modal'>
-                <h2>{category ? 'Edit Category' : 'Add Category'}</h2>
-                <label>Name EN:</label>
-                <input type="text" value={nameEn} onChange={(e) => setNameEn(e.target.value)} />
-                <label>Name RU:</label>
-                <input type="text" value={nameRu} onChange={(e) => setNameRu(e.target.value)} />
-                <label>Image:</label>
-                <input type="file" accept="image/*" onChange={handleImageChange} />
-                <div className='modal-buttons'>
-                    <button className='cancel_btn' onClick={onClose}>Cancel</button>
-                    <button className='save_btn' onClick={handleSave}>{category ? 'Save' : 'Add'}</button>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-// Category component
-export default function Category() {
-    const [categories, setCategories] = useState([]);
-    const [currentCategory, setCurrentCategory] = useState(null);
-    const [showModal, setShowModal] = useState(false);
-    const urlImg = 'https://autoapi.dezinfeksiyatashkent.uz/api/uploads/images/';
-
-    const getCategory = () => {
-        fetch('https://autoapi.dezinfeksiyatashkent.uz/api/categories')
-            .then(res => res.json())
-            .then(data => {
-                setCategories(data.data);
-            });
-    };
-
-    const handleEditClick = (item) => {
-        setCurrentCategory(item);
-        setShowModal(true);
-    };
-
-    const handleAddClick = () => {
-        setCurrentCategory(null);
-        setShowModal(true);
-    };
-
-    const handleModalClose = () => {
-        setShowModal(false);
-        setCurrentCategory(null);
-    };
-
-    const handleSave = (formData) => {
-        if (currentCategory) {
-            // Update the category locally
-            const updatedCategory = { ...currentCategory, name_en: formData.get('name_en'), name_ru: formData.get('name_ru') };
-            if (formData.has('image')) {
-                updatedCategory.image_src = formData.get('image').name;
-            }
-            setCategories(categories.map(cat => cat.id === updatedCategory.id ? updatedCategory : cat));
-            // Make an API call to save the updated category on the server
-            fetch(`https://autoapi.dezinfeksiyatashkent.uz/api/categories/${updatedCategory.id}`, {
-                method: 'PUT',
-                body: formData,
-            }).then(response => {
-                if (response.ok) {
-                    console.log('Category updated successfully');
-                    getCategory(); // Refresh the category list
-                } else {
-                    console.error('Failed to update category');
-                }
-            });
+    fetch('https://autoapi.dezinfeksiyatashkent.uz/api/categories', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      method: 'POST',
+      body: formData
+    })
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.success) {
+          handleClose();
+          setCategories([...categories, res.data]); 
+          message.success('Category added successfully.');
         } else {
-            // Add the new category locally
-            fetch(`https://autoapi.dezinfeksiyatashkent.uz/api/categories`, {
-                method: 'POST',
-                body: formData,
-            }).then(response => {
-                if (response.ok) {
-                    console.log('Category added successfully');
-                    getCategory(); // Refresh the category list after adding a new category
-                } else {
-                    console.error('Failed to add category');
-                }
-            });
+          message.error('Failed to add category.');
         }
-        handleModalClose();
-    };
+      })
+      .catch((error) => {
+        console.error('Error adding category:', error);
+        message.error('Failed to add category.');
+      });
+  };
 
-    const handleDeleteClick = (id) => {
-        setCategories(categories.filter(cat => cat.id !== id));
-        fetch(`https://autoapi.dezinfeksiyatashkent.uz/api/categories/${id}`, {
-            method: 'DELETE',
-        }).then(response => {
-            if (response.ok) {
-                console.log('Category deleted successfully');
-                getCategory(); // Refresh the category list
-            } else {
-                console.error('Failed to delete category');
-            }
-        });
-    };
+  const editCategory = (e) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append('name_en', data.name_en);
+    formData.append('name_ru', data.name_ru);
+    if (data.image instanceof File) {
+      formData.append('images', data.image);
+    }
 
-    useEffect(() => {
-        getCategory();
-    }, []);
+    fetch(`https://autoapi.dezinfeksiyatashkent.uz/api/categories/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      method: 'PUT',
+      body: formData
+    })
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.success) {
+          handleClose();
+          getCategory(); 
+          message.success('Category updated successfully.');
+        } else {
+          message.error('Failed to update category.');
+        }
+      })
+      .catch((error) => {
+        console.error('Error updating category:', error);
+        message.error('Failed to update category.');
+      });
+  };
 
-    return (
-        <div className='category'>
-            <button className='add-category-btn' onClick={handleAddClick}>Add Category</button>
-            <table border={1}>
-                <thead>
-                    <tr>
-                        <th>Name EN</th>
-                        <th>Name RU</th>
-                        <th>Images</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {
-                        categories && categories.map((item, index) => (
-                            <tr key={index}>
-                                <td>{item.name_en}</td>
-                                <td>{item.name_ru}</td>
-                                <td>
-                                    <img src={`${urlImg}${item.image_src}`} alt={item.name_en} />
-                                </td>
-                                <td>
-                                    <button className='edit' onClick={() => handleEditClick(item)}>Edit</button>
-                                    <button className='delete' onClick={() => handleDeleteClick(item.id)}>Delete</button>
-                                </td>
-                            </tr>
-                        ))
-                    }
-                </tbody>
-            </table>
-            <Modal
-                show={showModal}
-                onClose={handleModalClose}
-                onSave={handleSave}
-                category={currentCategory}
-            />
-        </div>
-    );
-}
+  const handleClose = () => {
+    setOpenEditModal(false);
+    setOpenAddModal(false);
+    setOpenDeleteModal(false);
+  };
+
+  const confirmDelete = (id) => {
+    setId(id);
+    setOpenDeleteModal(true);
+  };
+
+  const deleteCategory = () => {
+    handleDelete(id);
+  };
+
+  return (
+    <div className="category">
+      <div className="category-adds">
+        <h1>Categories</h1>
+        <Button
+          type="primary"
+          className="add-category-btn"
+          onClick={handleAdd}
+          icon={<PlusOutlined />}
+        >
+          Add
+        </Button>
+      </div>
+      <table className="customers">
+        <thead>
+          <tr>
+            <th>No</th>
+            <th>Name EN</th>
+            <th>Name RU</th>
+            <th>Images</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {loading ? (
+            <tr>
+              <td colSpan="5">
+                <div className="spinner"></div>
+              </td>
+            </tr>
+          ) : (
+            categories.map((item, index) => (
+              <tr key={index}>
+                <td>{index + 1}</td>
+                <td>{item.name_en}</td>
+                <td>{item.name_ru}</td>
+                <td>
+                  <img src={`${urlImg}${item.image_src}`} alt={item.name_en} />
+                </td>
+                <td>
+                  <Button
+                    type="link"
+                    className="edit"
+                    icon={<EditOutlined />}
+                    onClick={() => handleEdit(item)}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    type="link"
+                    className="delete"
+                    icon={<DeleteOutlined />}
+                    onClick={() => confirmDelete(item.id)}
+                  >
+                    Delete
+                  </Button>
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+
+      <Modal title="Edit Category" visible={openEditModal} onCancel={handleClose} footer={null}>
+        <form onSubmit={editCategory}>
+          <label>Name EN:</label>
+          <input
+            type="text"
+            value={data.name_en}
+            onChange={(e) => setData({ ...data, name_en: e.target.value })}
+          />
+          <label>Name RU:</label>
+          <input
+            type="text"
+            value={data.name_ru}
+            onChange={(e) => setData({ ...data, name_ru: e.target.value })}
+          />
+          <label>Image:</label>
+          <input
+            type="file"
+            onChange={(e) => setData({ ...data, image: e.target.files[0] })}
+            accept="image/*"
+          />
+          <div className="modal-buttons">
+            <button type="button" className="cancel_btn" onClick={handleClose}>
+              Cancel
+            </button>
+            <button type="submit" className="save_btn">
+              Update
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal title="Add Category" visible={openAddModal} onCancel={handleClose} footer={null}>
+        <form onSubmit={addCategory}>
+          <label>Name EN:</label>
+          <input
+            type="text"
+            value={data.name_en}
+            onChange={(e) => setData({ ...data, name_en: e.target.value })}
+          />
+          <label>Name RU:</label>
+          <input
+            type="text"
+            value={data.name_ru}
+            onChange={(e) => setData({ ...data, name_ru: e.target.value })}
+          />
+          <label>Image:</label>
+          <input
+            type="file"
+            onChange={(e) => setData({ ...data, image: e.target.files[0] })}
+            accept="image/*"
+          />
+          <div className="modal-buttons">
+            <button type="button" className="cancel_btn" onClick={handleClose}>
+              Cancel
+            </button>
+            <button type="submit" className="save_btn">
+              Add
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal
+        title="Delete Category"
+        visible={openDeleteModal}
+        onCancel={handleClose}
+        footer={[
+          <Button key="cancel" onClick={handleClose}>
+            Cancel
+          </Button>,
+          <Button key="delete" type="primary" danger onClick={deleteCategory}>
+            Delete
+          </Button>
+        ]}
+      >
+        <p>Are you sure you want to delete this category?</p>
+      </Modal>
+    </div>
+  );
+};
+
+export default Category;
