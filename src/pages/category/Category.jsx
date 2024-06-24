@@ -14,7 +14,7 @@ const Category = () => {
 
   const urlImg = 'https://autoapi.dezinfeksiyatashkent.uz/api/uploads/images/';
   
-  const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNTczNzkzNTUtZDNjYi00NzY1LTgwMGEtNDZhOTU1NWJiOWQyIiwidG9rZW5fdHlwZSI6ImFjY2VzcyIsImlhdCI6MTcxODYxNTMzOCwiZXhwIjoxNzUwMTUxMzM4fQ.8VHqHugzBuuXAF2A01S6etFMf2Ou_YD1OiZn3Uc96oI';  // Replace with your actual token
+  const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNTczNzkzNTUtZDNjYi00NzY1LTgwMGEtNDZhOTU1NWJiOWQyIiwidG9rZW5fdHlwZSI6ImFjY2VzcyIsImlhdCI6MTcxODYxNTMzOCwiZXhwIjoxNzUwMTUxMzM4fQ.8VHqHugzBuuXAF2A01S6etFMf2Ou_YD1OiZn3Uc96oI'; 
 
   const getCategory = () => {
     setLoading(true);

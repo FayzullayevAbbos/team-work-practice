@@ -156,12 +156,6 @@ const Cities = () => {
         </tbody>
       </table>
 
-<<<<<<< HEAD
-export default Cities
-
-
-
-=======
       <Modal
         title={modalType === 'edit' ? "Edit City" : modalType === 'add' ? "Add City" : "Delete City"}
         visible={openModal}
@@ -194,4 +188,4 @@ export default Cities
 };
 
 export default Cities;
->>>>>>> origin/main
+
